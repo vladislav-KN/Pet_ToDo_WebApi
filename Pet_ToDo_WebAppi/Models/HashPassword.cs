@@ -1,16 +1,20 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Pet_ToDo_WebApi.Models
 {
     public class HashPasswordModel
-    { 
+    {
+        [Key]
         public int Id { get; set; }
-        public string? HashPassword { get; set; }
-        public string? HashSalt { get; set; }
-        public int UserId { get; set; }
-        public User? User { get; set; } 
+        [Required]
+        public string HashPassword { get; set; } = null!;
+        [Required]
+        public string HashSalt { get; set; } = null!;
+        [Required]
+        public UserModel User { get; set; } = null!;
 
         public static string GenerateSalt(int length)
         { 

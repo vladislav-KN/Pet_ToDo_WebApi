@@ -1,12 +1,16 @@
-﻿namespace Pet_ToDo_WebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Pet_ToDo_WebApi.Models
 {
     public class TaskModel
     {
+        [Key]
         public int Id { get; set; }
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public bool? IsCompleted { get; set; }
-        public int UserId { get; set; }
-        public UserModel? Owner { get; set; }
+        [Required]
+        public string Name { get; set; } = null!;
+
+        public string Description { get; set; } = null!;
+        public bool IsCompleted { get; set; } 
+        public UserModel Owner { get; set; } = null!;
     }
 }
