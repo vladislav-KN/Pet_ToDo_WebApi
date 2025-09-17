@@ -8,10 +8,17 @@ namespace Pet_ToDo_WebApi.Data
         public DbSet<HashPasswordModel> HashPasswords { get; set; }
         public DbSet<TaskModel> Tasks { get; set; }
         public DbSet<UserModel> Users { get; set; }
+        public string DbPath { get; }
 
+        public ToDoContext()
+        {
+            var folder = Environment.CurrentDirectory; 
+            DbPath = System.IO.Path.Join(folder, "DataBase\\ToDo.db");
+        }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            
+            optionsBuilder.UseSqlite($"Data Source={DbPath}");
+            base.OnConfiguring(optionsBuilder);
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +36,7 @@ namespace Pet_ToDo_WebApi.Data
             modelBuilder.Entity<UserModel>()
                         .HasIndex(u => u.Name)
                         .IsUnique();
+            base.OnModelCreating(modelBuilder);
         }
     }
 }
