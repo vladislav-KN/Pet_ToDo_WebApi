@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Pet_ToDo_WebApi.Models
 {
@@ -14,6 +15,7 @@ namespace Pet_ToDo_WebApi.Models
         [Required]
         public string HashSalt { get; set; } = null!;
         [Required]
+        [JsonIgnore]
         public UserModel User { get; set; } = null!;
 
         public static string GenerateSalt(int length)
