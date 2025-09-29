@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Pet_ToDo_WebApi.Models;
+using Pet_ToDo_WebApi.Entities;
 
 namespace Pet_ToDo_WebApi.Data
 {
     public class ToDoContext: DbContext
     {
-        public DbSet<HashPasswordModel> HashPasswords { get; set; }
-        public DbSet<TaskModel> Tasks { get; set; }
-        public DbSet<UserModel> Users { get; set; }
+        public DbSet<HashPasswordEntity> HashPasswords { get; set; }
+        public DbSet<TaskEntity> Tasks { get; set; }
+        public DbSet<UserEntity> Users { get; set; }
         public string DbPath { get; }
 
         public ToDoContext()
@@ -22,18 +22,18 @@ namespace Pet_ToDo_WebApi.Data
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<UserModel>()
+            modelBuilder.Entity<UserEntity>()
                         .HasOne(e => e.Password)
                         .WithOne(e => e.User)
-                        .HasForeignKey<HashPasswordModel>();
+                        .HasForeignKey<HashPasswordEntity>();
 
-            modelBuilder.Entity<UserModel>()
+            modelBuilder.Entity<UserEntity>()
                         .HasMany(e => e.Tasks)
                         .WithOne(e => e.Owner)
                         .HasForeignKey("UserId")
                         .IsRequired();
 
-            modelBuilder.Entity<UserModel>()
+            modelBuilder.Entity<UserEntity>()
                         .HasIndex(u => u.Name)
                         .IsUnique();
             base.OnModelCreating(modelBuilder);

@@ -4,9 +4,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace Pet_ToDo_WebApi.Models
+namespace Pet_ToDo_WebApi.Entities
 {
-    public class HashPasswordModel
+    public class HashPasswordEntity
     {
         [Key]
         public int Id { get; set; }
@@ -16,7 +16,7 @@ namespace Pet_ToDo_WebApi.Models
         public string HashSalt { get; set; } = null!;
         [Required]
         [JsonIgnore]
-        public UserModel User { get; set; } = null!;
+        public UserEntity User { get; set; } = null!;
 
         public static string GenerateSalt(int length)
         { 
