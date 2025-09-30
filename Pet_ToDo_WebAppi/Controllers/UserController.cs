@@ -19,14 +19,12 @@ namespace Pet_ToDo_WebApi.Controllers
     [Route("api/[controller]")]
     [ApiController] 
     public class UserController: Controller
-    {
-        private readonly ToDoContext toDoContext;
+    { 
         private readonly IConfiguration _config;
         private readonly IUserService _standardService;
         public UserController(IConfiguration config, IUserService serviceAsync)
         {
-            _config = config;
-            toDoContext = new ToDoContext();
+            _config = config; 
             _standardService = serviceAsync;
         }
       
@@ -53,16 +51,10 @@ namespace Pet_ToDo_WebApi.Controllers
             {
                 var token = GenerateToken(user);
                 if(token!= null)
-                { 
-                    int saveRes = await toDoContext.SaveChangesAsync();
-                    if (saveRes > 0)
-                        return StatusCode(StatusCodes.Status200OK, token);
-                }
-                else
                 {
-                    var resUser = toDoContext.Users.Remove(user);
-                    var resHash = toDoContext.HashPasswords.Remove(user.Password);
-                }
+                    return StatusCode(StatusCodes.Status200OK, token);
+
+                } 
               
             }
             return StatusCode(StatusCodes.Status406NotAcceptable, "cannot post database");
