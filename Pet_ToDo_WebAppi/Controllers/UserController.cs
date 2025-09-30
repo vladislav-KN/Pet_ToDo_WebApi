@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using Pet_ToDo_WebApi.Data;
 using Pet_ToDo_WebApi.Entities;
 using Pet_ToDo_WebApi.Models;
+using Pet_ToDo_WebApi.Services;
+using Pet_ToDo_WebApi.Services.UserService;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -20,10 +22,12 @@ namespace Pet_ToDo_WebApi.Controllers
     {
         private readonly ToDoContext toDoContext;
         private readonly IConfiguration _config;
-        public UserController(IConfiguration config)
+        private readonly IUserService _standardService;
+        public UserController(IConfiguration config, IUserService serviceAsync)
         {
             _config = config;
             toDoContext = new ToDoContext();
+            _standardService = serviceAsync;
         }
       
         [AllowAnonymous]
@@ -31,7 +35,7 @@ namespace Pet_ToDo_WebApi.Controllers
         public async Task<ActionResult<UserEntity>> Login([FromBody] UsernamePasswordModel unpModel)
         {
 
-            var user = Authorize(unpModel.Username, unpModel.Password);
+            var user = await Authorize(unpModel.Username, unpModel.Password);
             if (user != null)
             {
                 var token = GenerateToken(user);
@@ -44,7 +48,7 @@ namespace Pet_ToDo_WebApi.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<UserEntity>> Register([FromBody] UsernamePasswordModel unpModel)
         {
-            var user = await Register(unpModel.Username, unpModel.Password);
+            var user = await _standardService.AddAsync(new UserEntity() { Name = unpModel.Username, Password = new() { HashPassword =  unpModel.Password } }); 
             if(user != null)
             {
                 var token = GenerateToken(user);
@@ -78,44 +82,14 @@ namespace Pet_ToDo_WebApi.Controllers
                 expires: DateTime.Now.AddMinutes(1), 
                 signingCredentials: credentials);
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private async Task<UserEntity?> Register(string username, string password)
-        {
-            SHA256 sHA256 = SHA256.Create();
-            var data = toDoContext.Users.Where(us => us.Name == username);
-            if (data.Any())
-            {
-                return null;
-            }
-            var salt = HashPasswordEntity.GenerateSalt(10);
-            var passwordHash = HashPasswordEntity.GetSha256Hash(sHA256, password + salt);
-            HashPasswordEntity hashPassword = new HashPasswordEntity { HashPassword = passwordHash, HashSalt = salt };
-            UserEntity user = new UserEntity { Name = username, Password = hashPassword };
-            hashPassword.User = user;
-            var resUser = await toDoContext.Users.AddAsync(user);
-            var resHash = await toDoContext.HashPasswords.AddAsync(hashPassword);
-            if (resUser != null && resHash != null)
-            {
-                return resUser.Entity; 
-            }
-            return null;
-        }
-
+        } 
       
-        private UserEntity? Authorize(string username, string password)
-        {
-            SHA256 sHA256 = SHA256.Create();
-            var data = toDoContext.Users.Include(x => x.Password).Where(us => us.Name ==  username);
-            if (data.Any())
+        private async Task<UserEntity?> Authorize(string username, string password)
+        { 
+            if(_standardService is UserService us)
             {
-                foreach (var user in data)
-                {
-                    if (HashPasswordEntity.GetSha256Hash(sHA256, password + user.Password.HashSalt) == user.Password.HashPassword)
-                        return user;
-
-                }
-            }
+                return await us.GetAuth(username, password); 
+            } 
             return null;
         }
         

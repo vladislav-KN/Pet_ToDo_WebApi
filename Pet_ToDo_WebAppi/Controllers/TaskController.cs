@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Pet_ToDo_WebApi.Data;
 using Pet_ToDo_WebApi.Entities;
 using Pet_ToDo_WebApi.Models;
+using Pet_ToDo_WebApi.Services;
+using Pet_ToDo_WebApi.Services.TaskService;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Pet_ToDo_WebApi.Controllers
 {
@@ -12,100 +15,69 @@ namespace Pet_ToDo_WebApi.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class TaskController : ControllerBase
-    {
-        private readonly ToDoContext toDoContext = new ToDoContext();
+    { 
+        private readonly ITaskService _dbService;
+        public TaskController(ITaskService service)
+        {
+            _dbService=service;
+        }
         [HttpGet]
         public async Task<ActionResult<ICollection<TaskEntity>>> GetTasks()
         {
-            UserEntity? user = FindUser();
-            if (user != null)
+            var res = _dbService.GetAll(FindUser()??"");
+            if (res != null)
             {
-                return Ok(user.Tasks);
+                return Ok(res);
             }
-            return NotFound( new List<TaskEntity>());
+            return NotFound();
         }
         [HttpGet("byid")]
         public async Task<ActionResult<TaskEntity>> GetTask(int id)
-        { 
-            UserEntity? user = FindUser();
-            if (user != null)
+        {
+            var res = _dbService.GetById(FindUser() ?? "",id);
+            if (res != null)
             {
-                TaskEntity taskEntity = user.Tasks.Where(task => task.Id==id).First();
-                if (taskEntity!=null) 
-                    return Ok(taskEntity);
+                return Ok(res);
             }
-           
-            return NotFound(null);
+            return NotFound(); 
         }
         [HttpPost]
-        public async Task<ActionResult<TaskEntity>> SaveData([FromBody] TaskApiModel task)
+        public async Task<ActionResult<TaskEntity>> AddTask([FromBody] TaskApiModel task)
         {
-            UserEntity? user = FindUser();
-           
-            if (user != null)
+            var res = await _dbService.Add(FindUser() ?? "", task);
+            if (res != null)
             {
-                TaskEntity newTask = new TaskEntity()
-                {
-                    Name = task.Name ?? "",
-                    Description = task.Description ?? "",
-                    IsCompleted = task.IsCompleted,
-                    Owner = user
-                };
-                toDoContext.Tasks.Add(newTask);
-                user.Tasks.Add(newTask);
-                toDoContext.Users.Update(user);
-                await toDoContext.SaveChangesAsync();
-                return Ok(newTask);
+                return Ok(res);
             }
-            
-            return NotFound(null);
+            return NotFound();
         }
         [HttpPut]
-        public async Task<ActionResult<TaskEntity>> SaveData([FromBody] TaskApiModel task, int id)
+        public async Task<ActionResult<TaskEntity>> UpdateTask([FromBody] TaskApiModel task, int id)
         {
-            UserEntity? user = FindUser();
-
-            if (user != null)
+            var res = await _dbService.Update(FindUser() ?? "", task,id);
+            if (res != null)
             {
-                var taskUpdate = toDoContext.Tasks.Where(task => task.Id == id && task.Owner.Id == user.Id).First();
-                taskUpdate.Name = task.Name!;
-                taskUpdate.Description = task.Description!;
-                taskUpdate.IsCompleted = task.IsCompleted;
-
-                toDoContext.Tasks.Update(taskUpdate);
-                toDoContext.Users.Update(user);
-                await toDoContext.SaveChangesAsync();
-
-                return Ok(taskUpdate);
+                return Ok(res);
             }
-
-            return NotFound(null);
+            return NotFound();
         }
         [HttpDelete]
         public async Task<ActionResult> DeleteData([FromBody] int id)
         {
-            UserEntity? user = FindUser();
-
-            if (user != null)
-            {  
-                await toDoContext.Tasks.Where(task => task.Id == id && task.Owner.Id == user.Id).ExecuteDeleteAsync();
-
+            var res = await _dbService.Delete(FindUser() ?? "",  id);
+            if (res == true)
+            {
                 return Ok();
             }
-
             return NotFound();
         }
-        private UserEntity? FindUser()
+        private string? FindUser()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             if (identity != null)
             {
-                string? name = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                UserEntity user = toDoContext.Users.Include(x=>x.Tasks).First(x => x.Name == name);
-                if (user != null)
-                {
-                    return user;
-                }
+                return identity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+               
             }
             return null;
         }

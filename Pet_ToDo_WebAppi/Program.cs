@@ -4,7 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Pet_ToDo_WebApi.Data;
-using Pet_ToDo_WebApi.Filters.SwaggerFilter;
+using Pet_ToDo_WebApi.Entities;
+using Pet_ToDo_WebApi.Services;
+using Pet_ToDo_WebApi.Services.TaskService;
+using Pet_ToDo_WebApi.Services.UserService;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,7 +39,9 @@ builder.Services.AddSwaggerGen(opt =>
             new string[]{}
         }
     });
-}); 
+});
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ToDoContext>();
